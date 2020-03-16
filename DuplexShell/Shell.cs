@@ -14,7 +14,7 @@ namespace DuplexShell
 		private ushort inputCursorPosition = 0; // Cursor position of currentInput
 
 		private readonly List<string> commandHistory = new List<string>(); // List of previously entered commands
-		private readonly ManualResetEvent blockOutput = new ManualResetEvent(true); // Locks output while inputThread is performing output actions
+		private readonly ManualResetEvent blocker = new ManualResetEvent(true);
 
 		public event EventHandler<ShellEventArgs> ShellCommandIssued;
 
@@ -45,9 +45,10 @@ namespace DuplexShell
 			Init();
 		}
 
-		private void Init()
+		protected void Init()
 		{
 			Thread inputThread = new Thread(Input);
+			inputThread.IsBackground = true;
 			inputThread.Start();
 
 			RewriteInput();
@@ -58,20 +59,20 @@ namespace DuplexShell
 			ShellCommandIssued?.Invoke(this, new ShellEventArgs(execCommand, commandHistory));
 		}
 
-		public void Output(string message)
+		public virtual void Output(string message)
 		{
-			blockOutput.WaitOne();
-			blockOutput.Reset();
+			blocker.WaitOne();
+			blocker.Reset();
 
 			ClearCurrentLine();
 			Console.Write(message + "\n" + ShellPrompt + currentInput);
 
 			Console.SetCursorPosition(Console.CursorLeft - inputCursorPosition, Console.CursorTop); // Move cursor to inputCursorPosition
 
-			blockOutput.Set();
+			blocker.Set();
 		}
 
-		public void Input()
+		public virtual void Input()
 		{
 			ConsoleKeyInfo currentKey;
 			while (true)
@@ -80,11 +81,12 @@ namespace DuplexShell
 
 				while (true)
 				{
-					blockOutput.WaitOne();
 
 					currentKey = Console.ReadKey(); // Read key input
 
-					blockOutput.Reset();
+					blocker.WaitOne();
+					blocker.Reset();
+
 					if (currentKey.Key == ConsoleKey.Enter) // If currentKey is the enter key, execute command
 					{
 						string execCommand = "";
@@ -108,12 +110,12 @@ namespace DuplexShell
 							currentInput = "";
 						}
 
-						blockOutput.Set();
-
 						// Execute
 						OnShellCommandIssued(execCommand, commandHistory);
 
 						RewriteInput();
+
+						blocker.Set();
 
 						break;
 					}
@@ -198,13 +200,13 @@ namespace DuplexShell
 
 					RewriteInput();
 
-					blockOutput.Set();
+					blocker.Set();
 				}
 			}
 		}
 
 		// Clears current line and returns cursor to left side
-		public void ClearCurrentLine()
+		public virtual void ClearCurrentLine()
 		{
 			Console.SetCursorPosition(0, Console.CursorTop);
 
@@ -217,7 +219,7 @@ namespace DuplexShell
 		}
 
 		// Clears current line, write shellPrompt and currentInput and sets the cursor position
-		private void RewriteInput()
+		protected void RewriteInput()
 		{
 			ClearCurrentLine();
 			Console.Write(ShellPrompt + currentInput);
@@ -226,7 +228,7 @@ namespace DuplexShell
 		}
 
 		// List of supported chars for commands
-		private enum SupportedKeys
+		protected enum SupportedKeys
 		{
 			A = ConsoleKey.A, B = ConsoleKey.B, C = ConsoleKey.C, D = ConsoleKey.D, E = ConsoleKey.E, F = ConsoleKey.F, G = ConsoleKey.G, H = ConsoleKey.H, I = ConsoleKey.I, J = ConsoleKey.J, K = ConsoleKey.K, L = ConsoleKey.L, M = ConsoleKey.M, N = ConsoleKey.N, O = ConsoleKey.O, P = ConsoleKey.P, Q = ConsoleKey.Q, R = ConsoleKey.R, S = ConsoleKey.S, T = ConsoleKey.T, U = ConsoleKey.U, V = ConsoleKey.V, W = ConsoleKey.W, X = ConsoleKey.X, Y = ConsoleKey.Y, Z = ConsoleKey.Z, D0 = ConsoleKey.D0, D1 = ConsoleKey.D1, D2 = ConsoleKey.D2, D3 = ConsoleKey.D3, D4 = ConsoleKey.D4, D5 = ConsoleKey.D5, D6 = ConsoleKey.D6, D7 = ConsoleKey.D7, D8 = ConsoleKey.D8, D9 = ConsoleKey.D9, NumPad0 = ConsoleKey.NumPad0, NumPad1 = ConsoleKey.NumPad1, NumPad2 = ConsoleKey.NumPad2, NumPad3 = ConsoleKey.NumPad3, NumPad4 = ConsoleKey.NumPad4, NumPad5 = ConsoleKey.NumPad5, NumPad6 = ConsoleKey.NumPad6, NumPad7 = ConsoleKey.NumPad7, NumPad8 = ConsoleKey.NumPad8, NumPad9 = ConsoleKey.NumPad9, Spacebar = ConsoleKey.Spacebar, Period = ConsoleKey.OemPeriod, Comma = ConsoleKey.OemComma, NumComma = ConsoleKey.Decimal, Minus = ConsoleKey.OemMinus, Plus = ConsoleKey.OemPlus
 		}
