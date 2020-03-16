@@ -1,29 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 
-namespace SecureChatServer.Main
+namespace DuplexShell
 {
-	class Test
+	public class Shell
 	{
-		public static void Main()
-		{
-			Shell shell = new Shell();
-
-			shell.ShellCommandIssued += OnShellCommandIssued;
-		}
-
-		private static void OnShellCommandIssued(object sender, EventArgs args)
-		{
-			Console.WriteLine("COMMAND HANDLED!");
-		}
-	}
-
-	class Shell
-	{
-		public const string shellPrompt = "SecureChatServer> ";
-		public const ushort historySize = 100; // Size of commandHistory buffer
+		public string ShellPrompt { get; set; } = "SecureChatServer> ";
+		public ushort HistorySize { get; set; } = 100; // Size of commandHistory buffer
 
 		private string currentInput; // Current command being displayed
 		private short historyIndex = -1; // Current index of commandHistory being displayed
@@ -32,10 +16,36 @@ namespace SecureChatServer.Main
 		private readonly List<string> commandHistory = new List<string>(); // List of previously entered commands
 		private readonly ManualResetEvent blockOutput = new ManualResetEvent(true); // Locks output while inputThread is performing output actions
 
-		public delegate void ShellCommandIssuedHandler(object sender, EventArgs args);
-		public event ShellCommandIssuedHandler ShellCommandIssued;
+		public event EventHandler<ShellEventArgs> ShellCommandIssued;
 
 		public Shell()
+		{
+			Init();
+		}
+
+		public Shell(string shellPrompt)
+		{
+			ShellPrompt = shellPrompt;
+
+			Init();
+		}
+
+		public Shell(ushort historySize)
+		{
+			HistorySize = historySize;
+
+			Init();
+		}
+
+		public Shell(ushort historySize, string shellPrompt)
+		{
+			HistorySize = historySize;
+			ShellPrompt = shellPrompt;
+
+			Init();
+		}
+
+		private void Init()
 		{
 			Thread inputThread = new Thread(Input);
 			inputThread.Start();
@@ -43,16 +53,16 @@ namespace SecureChatServer.Main
 			RewriteInput();
 		}
 
-		protected virtual void OnShellCommandIssued()
+		protected virtual void OnShellCommandIssued(string execCommand, List<string> commandHistory)
 		{
-			ShellCommandIssued?.Invoke(this, EventArgs.Empty);
+			ShellCommandIssued?.Invoke(this, new ShellEventArgs(execCommand, commandHistory));
 		}
 
 		public void Output(string message)
 		{
 			blockOutput.WaitOne();
 			ClearCurrentLine();
-			Console.Write(message + "\n" + shellPrompt + currentInput);
+			Console.Write(message + "\n" + ShellPrompt + currentInput);
 
 			Console.SetCursorPosition(Console.CursorLeft - inputCursorPosition, Console.CursorTop); // Move cursor to inputCursorPosition
 		}
@@ -82,7 +92,7 @@ namespace SecureChatServer.Main
 						// Write to commandHistory, delete last element if commandHistorySize reached
 						if (currentInput.Length > 0)
 						{
-							if (commandHistory.Count >= historySize)
+							if (commandHistory.Count >= HistorySize)
 							{
 								commandHistory.RemoveAt(commandHistory.Count - 1);
 							}
@@ -95,7 +105,7 @@ namespace SecureChatServer.Main
 						blockOutput.Set();
 
 						// Execute
-						OnShellCommandIssued();
+						OnShellCommandIssued(execCommand, commandHistory);
 
 						RewriteInput();
 
@@ -167,7 +177,7 @@ namespace SecureChatServer.Main
 					}
 					else
 					{
-						if (shellPrompt.Length + currentInput.Length < Console.WindowWidth - 5)
+						if (ShellPrompt.Length + currentInput.Length < Console.WindowWidth - 5)
 						{
 							// Check if pressed key is a printable char
 							foreach (var current in Enum.GetValues(typeof(SupportedKeys)))
@@ -204,7 +214,7 @@ namespace SecureChatServer.Main
 		private void RewriteInput()
 		{
 			ClearCurrentLine();
-			Console.Write(shellPrompt + currentInput);
+			Console.Write(ShellPrompt + currentInput);
 
 			Console.SetCursorPosition(Console.CursorLeft - inputCursorPosition, Console.CursorTop); // Move cursor to inputCursorPosition
 		}
