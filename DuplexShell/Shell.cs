@@ -61,10 +61,14 @@ namespace DuplexShell
 		public void Output(string message)
 		{
 			blockOutput.WaitOne();
+			blockOutput.Reset();
+
 			ClearCurrentLine();
 			Console.Write(message + "\n" + ShellPrompt + currentInput);
 
 			Console.SetCursorPosition(Console.CursorLeft - inputCursorPosition, Console.CursorTop); // Move cursor to inputCursorPosition
+
+			blockOutput.Set();
 		}
 
 		public void Input()
@@ -76,6 +80,8 @@ namespace DuplexShell
 
 				while (true)
 				{
+					blockOutput.WaitOne();
+
 					currentKey = Console.ReadKey(); // Read key input
 
 					blockOutput.Reset();
