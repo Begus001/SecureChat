@@ -5,9 +5,9 @@ VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SecureChatServer", "SecureChatServer\SecureChatServer.csproj", "{3E59251B-2F6D-4D6D-B010-D4A08C9CB327}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DuplexShell", "DuplexShell\DuplexShell.csproj", "{27CACEE9-C03A-45EB-B17C-7BFA34466601}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DuplexShell", "DuplexShell\DuplexShell.csproj", "{27CACEE9-C03A-45EB-B17C-7BFA34466601}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.csproj", "{5B745C82-2A1E-49D5-B596-C573603C6823}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "..\..\..\Desktop\ServerClientTest\Client\Client.csproj", "{CBA93E3C-8734-44DB-B849-B33F22BF477F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{27CACEE9-C03A-45EB-B17C-7BFA34466601}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27CACEE9-C03A-45EB-B17C-7BFA34466601}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27CACEE9-C03A-45EB-B17C-7BFA34466601}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5B745C82-2A1E-49D5-B596-C573603C6823}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5B745C82-2A1E-49D5-B596-C573603C6823}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5B745C82-2A1E-49D5-B596-C573603C6823}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5B745C82-2A1E-49D5-B596-C573603C6823}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CBA93E3C-8734-44DB-B849-B33F22BF477F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBA93E3C-8734-44DB-B849-B33F22BF477F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBA93E3C-8734-44DB-B849-B33F22BF477F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBA93E3C-8734-44DB-B849-B33F22BF477F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
