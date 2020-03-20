@@ -6,12 +6,13 @@ namespace DuplexShell
 {
 	public class Shell
 	{
-		public string ShellPrompt { get; set; } = "SecureChatServer> ";
+		public string ShellPrompt { get; set; } = "> ";
 		public ushort HistorySize { get; set; } = 100; // Size of commandHistory buffer
 
 		private string currentInput; // Current command being displayed
 		private short historyIndex = -1; // Current index of commandHistory being displayed
 		private ushort inputCursorPosition = 0; // Cursor position of currentInput
+		private bool inputting = false, outputting = false;
 
 		private readonly List<string> commandHistory = new List<string>(); // List of previously entered commands
 		private readonly ManualResetEvent blocker = new ManualResetEvent(true);
@@ -59,17 +60,86 @@ namespace DuplexShell
 			ShellCommandIssued?.Invoke(this, new ShellEventArgs(execCommand, commandHistory));
 		}
 
+		// Output message with DateTime
 		public virtual void Output(string message)
 		{
 			blocker.WaitOne();
 			blocker.Reset();
 
+			while (inputting) ;
+
+			outputting = true;
+
+			DateTime currentTime = DateTime.Now;
+
 			ClearCurrentLine();
-			Console.Write(message + "\n" + ShellPrompt + currentInput);
+			Console.Write("[{0}] {1}\n{2}{3}", currentTime.ToString(), message, ShellPrompt, currentInput);
 
 			Console.SetCursorPosition(Console.CursorLeft - inputCursorPosition, Console.CursorTop); // Move cursor to inputCursorPosition
 
+			outputting = false;
+
 			blocker.Set();
+		}
+
+		// Output message with DateTime, if disableDateTime = false
+		public virtual void Output(string message, bool disableDateTime)
+		{
+			blocker.WaitOne();
+			blocker.Reset();
+
+			while (inputting) ;
+
+			outputting = true;
+
+			DateTime currentTime = DateTime.Now;
+
+			ClearCurrentLine();
+			Console.Write("{0}{1}\n{2}{3}", disableDateTime ? "[" + currentTime.ToString() + "] " : "", message, ShellPrompt, currentInput);
+
+			Console.SetCursorPosition(Console.CursorLeft - inputCursorPosition, Console.CursorTop); // Move cursor to inputCursorPosition
+
+			outputting = false;
+
+			blocker.Set();
+		}
+
+		// Output message with DateTime, if disableDateTime = false, in specific color
+		public virtual void Output(string message, bool disableDateTime, ConsoleColor color)
+		{
+			blocker.WaitOne();
+			blocker.Reset();
+
+			while (inputting) ;
+
+			outputting = true;
+
+			DateTime currentTime = DateTime.Now;
+
+			Console.ForegroundColor = color;
+
+			ClearCurrentLine();
+			Console.WriteLine("{0}{1}", disableDateTime ? "[" + currentTime.ToString() + "] " : "", message);
+
+			Console.ForegroundColor = ConsoleColor.White;
+
+			Console.Write(ShellPrompt + currentInput);
+
+			Console.SetCursorPosition(Console.CursorLeft - inputCursorPosition, Console.CursorTop); // Move cursor to inputCursorPosition
+
+			outputting = false;
+
+			blocker.Set();
+		}
+
+		public virtual void Warning(string message)
+		{
+			Output(message, true, ConsoleColor.Yellow);
+		}
+
+		public virtual void Error(string message)
+		{
+			Output(message, true, ConsoleColor.Red);
 		}
 
 		public virtual void Input()
@@ -86,6 +156,9 @@ namespace DuplexShell
 
 					blocker.WaitOne();
 					blocker.Reset();
+
+					while (outputting) ;
+					inputting = true;
 
 					if (currentKey.Key == ConsoleKey.Enter) // If currentKey is the enter key, execute command
 					{
@@ -114,6 +187,8 @@ namespace DuplexShell
 						OnShellCommandIssued(execCommand, commandHistory);
 
 						RewriteInput();
+
+						inputting = false;
 
 						blocker.Set();
 
@@ -199,6 +274,8 @@ namespace DuplexShell
 					}
 
 					RewriteInput();
+
+					inputting = false;
 
 					blocker.Set();
 				}
